@@ -1,0 +1,55 @@
+#Import necessary libraries
+import pandas as pd
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.metrics import classification_report
+
+# Step 1: Download the VADER lexicon (only need to do this once)
+nltk.download('vader_lexicon')
+
+# Step 2: Load the dataset (Replace 'Tweets.csv' with the correct path to your file)
+df = pd.read_csv('Tweets.csv')
+
+# Step 3: Select relevant columns for analysis
+df = df[['text', 'airline_sentiment']]
+
+# Step 4: Initialize the VADER sentiment analyzer
+sid = SentimentIntensityAnalyzer()
+
+# Step 5: Define a function to apply VADER sentiment analysis
+def get_vader_sentiment(text):
+    score = sid.polarity_scores(text)  # Get the sentiment scores
+    compound = score['compound']  # Compound score indicates overall sentiment
+    if compound >= 0.05:
+        return 'positive'  # Positive sentiment
+    elif compound <= -0.05:
+        return 'negative'  # Negative sentiment
+    else:
+        return 'neutral'  # Neutral sentiment
+
+# Step 6: Apply the sentiment analysis function to each tweet
+df['vader_sentiment'] = df['text'].apply(get_vader_sentiment)
+
+# Step 7: Display the resulting dataframe with original and predicted sentiments
+print(df[['text', 'airline_sentiment', 'vader_sentiment']].head())
+
+# Step 8: Evaluate the performance of VADER sentiment analysis
+print(classification_report(df['airline_sentiment'], df['vader_sentiment']))
+
+# Step 9: Visualize the sentiment distribution (for both original and VADER sentiments)
+plt.figure(figsize=(12, 5))
+
+# Plot for original sentiment labels
+plt.subplot(1, 2, 1)
+sns.countplot(x='airline_sentiment', data=df)
+plt.title('Original Sentiment Labels')
+
+# Plot for VADER sentiment predictions
+plt.subplot(1, 2, 2)
+sns.countplot(x='vader_sentiment', data=df)
+plt.title('VADER Sentiment Predictions')
+
+plt.tight_layout()
+plt.show()
